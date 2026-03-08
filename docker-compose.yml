@@ -67,6 +67,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 30s
 
   # Kafka UI for monitoring
   kafka-ui:
@@ -155,6 +156,23 @@ services:
       kafka.bootstrap-servers: kafka:29092
     ports:
       - "8083:8083"
+    networks:
+      - ecommerce-network
+
+  # API Gateway
+  api-gateway:
+    build:
+      context: .                          # Root folder = build context (sees all modules)
+      dockerfile: api-gateway/Dockerfile  # But use THIS Dockerfile
+    container_name: api-gateway
+    ports:
+      - "8085:8080"    # Expose 8080 to outside world
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    depends_on:
+      - order-service
+      - product-service
+      - payment-service
     networks:
       - ecommerce-network
 

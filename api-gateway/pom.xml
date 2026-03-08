@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 
+         http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+    <!-- This module's parent is your root pom.xml -->
+    <parent>
+        <groupId>com.ecommerce</groupId>
+        <artifactId>ecommerce-system</artifactId>
+        <version>1.0.0</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
+    <modelVersion>4.0.0</modelVersion>
+    <artifactId>api-gateway</artifactId>
+    <name>API Gateway</name>
+
+    <dependencies>
+
+        <!-- 
+            Spring Cloud Gateway — this IS the gateway.
+            Notice: it's REACTIVE (uses WebFlux, not Servlet).
+            This is why we do NOT add spring-boot-starter-web here.
+            Gateway uses Netty (non-blocking), not Tomcat (blocking).
+            This is a KEY concept interviewers ask about!
+        -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-gateway</artifactId>
+        </dependency>
+
+        <!-- 
+            Spring Actuator — gives us /actuator/health endpoint
+            Useful for Docker health checks and monitoring
+        -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+
+    </dependencies>
+    <build>
+    <plugins>
+        <plugin>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-maven-plugin</artifactId>
+            <executions>
+                <execution>
+                    <goals>
+                        <!--
+                            Explicitly tell Maven: during the 'package' phase,
+                            run the 'repackage' goal.
+                            This replaces the thin JAR with a fat executable JAR
+                            that includes all dependencies + embedded Netty server
+                            + correct MANIFEST.MF with Main-Class entry.
+                        -->
+                        <goal>repackage</goal>
+                    </goals>
+                </execution>
+            </executions>
+        </plugin>
+    </plugins>
+</build>
+
+</project>

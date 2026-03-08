@@ -1,0 +1,62 @@
+# No change needed inside the app itself
+# The app still listens on 8080 INSIDE the container
+# Docker maps host:8085 → container:8080
+
+server:
+  port: 8080  # Gateway runs on 8080 — single entry point for all clients
+
+spring:
+  application:
+    name: api-gateway
+
+  cloud:
+    gateway:
+      routes:
+
+        # ─────────────────────────────────────────
+        # ROUTE 1: Order Service
+        # ─────────────────────────────────────────
+        - id: order-service           # Just a name for this route (for logs)
+          uri: http://order-service:8081   # WHERE to forward (Docker service name)
+          predicates:
+            - Path=/api/orders/**     # WHEN to forward (URL pattern)
+          filters:
+            - StripPrefix=0           # Don't strip any path prefix
+
+        # ─────────────────────────────────────────
+        # ROUTE 2: Product Service
+        # ─────────────────────────────────────────
+        - id: product-service
+          uri: http://product-service:8082
+          predicates:
+            - Path=/api/products/**
+          filters:
+            - StripPrefix=0
+
+        # ─────────────────────────────────────────
+        # ROUTE 3: Payment Service
+        # ─────────────────────────────────────────
+        - id: payment-service
+          uri: http://payment-service:8083
+          predicates:
+            - Path=/api/payments/**
+          filters:
+            - StripPrefix=0
+
+      # Global CORS config — allows browser apps to call your API
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOrigins: "*"
+            allowedMethods: "*"
+            allowedHeaders: "*"
+
+# Expose actuator endpoints for health monitoring
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, gateway
+  endpoint:
+    gateway:
+      enabled: true   # Exposes /actuator/gateway/routes — shows all routes!

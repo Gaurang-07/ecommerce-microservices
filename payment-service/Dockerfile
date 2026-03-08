@@ -14,6 +14,7 @@ COPY payment-service/src ./payment-service/src
 # Copy other service poms (needed for parent dependency)
 COPY order-service/pom.xml ./order-service/
 COPY product-service/pom.xml ./product-service/
+COPY api-gateway/pom.xml ./api-gateway/
 
 # Build from root with specific modules
 RUN mvn clean package -DskipTests -q -pl shared-models,payment-service

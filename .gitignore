@@ -1,0 +1,66 @@
+# Maven
+target/
+*.jar
+*.war
+*.ear
+*.zip
+*.tar.gz
+pom.xml.tag
+pom.xml.releaseBackup
+release.properties
+dependency-reduced-pom.xml
+.flattened-pom.xml
+.m2/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+*.iml
+.classpath
+.project
+.settings/
+*.class
+
+# Gradle
+.gradle
+build/
+gradle/
+
+# Logging
+*.log
+logs/
+
+# Docker
+.dockerignore
+__pycache__/
+
+# Environment
+.env
+.env.local
+.env.prod
+
+# OS
+.DS_Store
+Thumbs.db
+.AppleDouble
+.LSOverride
+
+META-INF/
+*.json
+*.bat
+*.sh
+COMMIT_STRATEGY.md
+FILE_STRUCTURE_REFERENCE.md
+INDEX.md
+PROJECT_SUMMARY.md
+QUICK_START.md
+SETUP_SUMMARY.md
+STEP_BY_STEP_GUIDE.md
+STOP_START_GUIDE.md
+SYSTEMS_HEALTH_CHECK.md
+TESTING_GUIDE.md
+TEST_REPORT.md
