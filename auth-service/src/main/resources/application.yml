@@ -1,0 +1,38 @@
+server:
+  port: 8084   # auth service runs on 8084
+
+spring:
+  application:
+    name: auth-service
+
+  datasource:
+    # Same PostgreSQL container your other services use
+    # auth service gets its own 'users' table in the same DB
+    url: jdbc:postgresql://localhost:5432/ecommerce_db
+    username: ecommerce_user
+    password: ecommerce_password
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      # create-drop: creates tables on startup, drops on shutdown
+      # update: only adds missing columns, never drops (use in prod)
+      # validate: just checks schema matches entities, no changes
+      ddl-auto: update
+    show-sql: true   # logs every SQL query — useful for learning, turn off in prod
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+# JWT Configuration
+# secret: the key used to sign tokens — MUST be same in gateway!
+# expiration: token valid for 24 hours (in milliseconds)
+jwt:
+  secret: ecommerce-super-secret-key-must-be-at-least-256-bits-long-for-hs256
+  expiration: 86400000   # 24 hours in ms (24 * 60 * 60 * 1000)
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
