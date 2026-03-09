@@ -17,6 +17,7 @@ COPY api-gateway/src ./api-gateway/src
 COPY order-service/pom.xml ./order-service/
 COPY payment-service/pom.xml ./payment-service/
 COPY product-service/pom.xml ./product-service/
+COPY auth-service/pom.xml ./auth-service/
 
 # Step 5: Build only what we need — shared-models first (dependency), then gateway
 RUN mvn clean package -DskipTests -q -pl shared-models,api-gateway

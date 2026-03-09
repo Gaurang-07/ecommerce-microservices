@@ -1,9 +1,5 @@
-# No change needed inside the app itself
-# The app still listens on 8080 INSIDE the container
-# Docker maps host:8085 → container:8080
-
 server:
-  port: 8080  # Gateway runs on 8080 — single entry point for all clients
+  port: 8080
 
 spring:
   application:
@@ -12,20 +8,23 @@ spring:
   cloud:
     gateway:
       routes:
-
-        # ─────────────────────────────────────────
-        # ROUTE 1: Order Service
-        # ─────────────────────────────────────────
-        - id: order-service           # Just a name for this route (for logs)
-          uri: http://order-service:8081   # WHERE to forward (Docker service name)
+        # Auth service — PUBLIC, no JWT filter applied
+        - id: auth-service
+          uri: http://auth-service:8084
           predicates:
-            - Path=/api/orders/**     # WHEN to forward (URL pattern)
+            - Path=/auth/**
           filters:
-            - StripPrefix=0           # Don't strip any path prefix
+            - StripPrefix=0
 
-        # ─────────────────────────────────────────
-        # ROUTE 2: Product Service
-        # ─────────────────────────────────────────
+        # Order service — PROTECTED
+        - id: order-service
+          uri: http://order-service:8081
+          predicates:
+            - Path=/api/orders/**
+          filters:
+            - StripPrefix=0
+
+        # Product service — PROTECTED
         - id: product-service
           uri: http://product-service:8082
           predicates:
@@ -33,9 +32,7 @@ spring:
           filters:
             - StripPrefix=0
 
-        # ─────────────────────────────────────────
-        # ROUTE 3: Payment Service
-        # ─────────────────────────────────────────
+        # Payment service — PROTECTED
         - id: payment-service
           uri: http://payment-service:8083
           predicates:
@@ -43,7 +40,6 @@ spring:
           filters:
             - StripPrefix=0
 
-      # Global CORS config — allows browser apps to call your API
       globalcors:
         cors-configurations:
           '[/**]':
@@ -51,7 +47,10 @@ spring:
             allowedMethods: "*"
             allowedHeaders: "*"
 
-# Expose actuator endpoints for health monitoring
+# JWT secret — MUST match auth-service exactly!
+jwt:
+  secret: ecommerce-super-secret-key-must-be-at-least-256-bits-long-for-hs256
+
 management:
   endpoints:
     web:
@@ -59,4 +58,4 @@ management:
         include: health, info, gateway
   endpoint:
     gateway:
-      enabled: true   # Exposes /actuator/gateway/routes — shows all routes!
+      enabled: true
