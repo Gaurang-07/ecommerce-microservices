@@ -15,6 +15,7 @@ COPY product-service/src ./product-service/src
 COPY order-service/pom.xml ./order-service/
 COPY payment-service/pom.xml ./payment-service/
 COPY api-gateway/pom.xml ./api-gateway/
+COPY auth-service/pom.xml ./auth-service/
 
 # Build from root with specific modules
 RUN mvn clean package -DskipTests -q -pl shared-models,product-service

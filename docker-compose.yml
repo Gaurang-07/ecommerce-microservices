@@ -176,6 +176,26 @@ services:
     networks:
       - ecommerce-network
 
+  # Auth Service
+  auth-service:
+    build:
+      context: .
+      dockerfile: auth-service/Dockerfile
+    container_name: ecommerce-auth-service
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      spring.datasource.url: jdbc:postgresql://postgres:5432/ecommerce_db
+      spring.datasource.username: ecommerce_user
+      spring.datasource.password: ecommerce_password
+      jwt.secret: ecommerce-super-secret-key-must-be-at-least-256-bits-long-for-hs256
+      jwt.expiration: 86400000
+    ports:
+      - "8084:8084"
+    networks:
+      - ecommerce-network
+
 volumes:
   postgres_data:
   redis_data:

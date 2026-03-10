@@ -19,6 +19,7 @@
         <module>payment-service</module>
         <module>shared-models</module>
         <module>api-gateway</module>
+        <module>auth-service</module> 
     </modules>
 
     <properties>
