@@ -8,7 +8,8 @@ spring:
   cloud:
     gateway:
       routes:
-        # Auth service — PUBLIC, no JWT filter applied
+        # Auth service — PUBLIC, no circuit breaker needed
+        # (if auth is down, nothing works anyway)
         - id: auth-service
           uri: http://auth-service:8084
           predicates:
@@ -16,46 +17,150 @@ spring:
           filters:
             - StripPrefix=0
 
-        # Order service — PROTECTED
+        # ─────────────────────────────────────────
+        # Order Service — WITH Circuit Breaker
+        # ─────────────────────────────────────────
         - id: order-service
           uri: http://order-service:8081
           predicates:
             - Path=/api/orders/**
           filters:
             - StripPrefix=0
+            - name: CircuitBreaker
+              args:
+                name: order-service-cb        # circuit breaker instance name
+                fallbackUri: forward:/fallback/orders
+                # fallbackUri: where to send request when circuit is OPEN
+                # forward: means call another endpoint on THIS gateway
 
-        # Product service — PROTECTED
+        # ─────────────────────────────────────────
+        # Product Service — WITH Circuit Breaker
+        # ─────────────────────────────────────────
         - id: product-service
           uri: http://product-service:8082
           predicates:
             - Path=/api/products/**
           filters:
             - StripPrefix=0
+            - name: CircuitBreaker
+              args:
+                name: product-service-cb
+                fallbackUri: forward:/fallback/products
 
-        # Payment service — PROTECTED
+        # ─────────────────────────────────────────
+        # Payment Service — WITH Circuit Breaker
+        # ─────────────────────────────────────────
         - id: payment-service
           uri: http://payment-service:8083
           predicates:
             - Path=/api/payments/**
           filters:
             - StripPrefix=0
+            - name: CircuitBreaker
+              args:
+                name: payment-service-cb
+                fallbackUri: forward:/fallback/payments
 
+        # ─────────────────────────────────────────
+        # Fallback routes — handled by FallbackController
+        # These routes catch the forwarded fallback requests
+        # ─────────────────────────────────────────
+        - id: fallback-orders
+          uri: http://localhost:8080   # self — this gateway
+          predicates:
+            - Path=/fallback/orders
+          filters:
+            - StripPrefix=0
+
+        - id: fallback-products
+          uri: http://localhost:8080
+          predicates:
+            - Path=/fallback/products
+          filters:
+            - StripPrefix=0
+
+        - id: fallback-payments
+          uri: http://localhost:8080
+          predicates:
+            - Path=/fallback/payments
+          filters:
+            - StripPrefix=0
+    
       globalcors:
         cors-configurations:
           '[/**]':
             allowedOrigins: "*"
             allowedMethods: "*"
             allowedHeaders: "*"
+    circuitbreaker:
+      resilience4j:
+        enabled: true
+    discovery:
+      enabled: false
 
-# JWT secret — MUST match auth-service exactly!
+# JWT config
 jwt:
   secret: ecommerce-super-secret-key-must-be-at-least-256-bits-long-for-hs256
+
+# ─────────────────────────────────────────
+# Resilience4j Circuit Breaker Configuration
+# ─────────────────────────────────────────
+resilience4j:
+  circuitbreaker:
+    instances:
+      # Config for order-service circuit breaker
+      order-service-cb:
+        # CLOSED → OPEN when 50% of last 10 calls fail
+        sliding-window-size: 10
+        failure-rate-threshold: 50
+        # How long to stay OPEN before trying HALF-OPEN
+        wait-duration-in-open-state: 30s
+        # How many requests to test in HALF-OPEN state
+        permitted-number-of-calls-in-half-open-state: 3
+        # Start counting after at least 5 calls
+        minimum-number-of-calls: 5
+        # Also open circuit on slow calls (>2 seconds)
+        slow-call-duration-threshold: 2s
+        slow-call-rate-threshold: 50
+        register-health-indicator: true
+        allow-health-indicator-to-fail: false
+
+      # Product service gets same config
+      product-service-cb:
+        sliding-window-size: 10
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 30s
+        permitted-number-of-calls-in-half-open-state: 3
+        minimum-number-of-calls: 5
+        slow-call-duration-threshold: 2s
+        slow-call-rate-threshold: 50
+        register-health-indicator: true
+        allow-health-indicator-to-fail: false
+
+      # Payment service — stricter (financial operations)
+      payment-service-cb:
+        sliding-window-size: 10
+        failure-rate-threshold: 30    # opens faster — only 30% failures needed
+        wait-duration-in-open-state: 60s   # stays open longer
+        permitted-number-of-calls-in-half-open-state: 2
+        minimum-number-of-calls: 5
+        slow-call-duration-threshold: 3s   # payments can be slightly slower
+        slow-call-rate-threshold: 40
+        register-health-indicator: true
+        allow-health-indicator-to-fail: false
 
 management:
   endpoints:
     web:
       exposure:
-        include: health, info, gateway
+        include: "*"
   endpoint:
     gateway:
+      enabled: true
+    health:
+      show-details: always   # shows circuit breaker state in health endpoint!
+  health:
+    circuitbreakers:
+      enabled: true
+    circuitbreakerevents:
       enabled: true
