@@ -16,6 +16,15 @@ spring:
             - Path=/auth/**
           filters:
             - StripPrefix=0
+            - name: RequestRateLimiter
+              args:
+                # Which bean to use for rate limiting
+                redis-rate-limiter: "#{@authRateLimiter}"
+                # Which bean to use as the key (IP for public routes)
+                key-resolver: "#{@ipKeyResolver}"
+                # What to do when rate limit exceeded
+                # true = return 429, false = drop silently
+                deny-empty-key: true
 
         # ─────────────────────────────────────────
         # Order Service — WITH Circuit Breaker
@@ -32,6 +41,11 @@ spring:
                 fallbackUri: forward:/fallback/orders
                 # fallbackUri: where to send request when circuit is OPEN
                 # forward: means call another endpoint on THIS gateway
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter: "#{@defaultRateLimiter}"
+                key-resolver: "#{@userKeyResolver}"
+                deny-empty-key: false
 
         # ─────────────────────────────────────────
         # Product Service — WITH Circuit Breaker
@@ -46,6 +60,11 @@ spring:
               args:
                 name: product-service-cb
                 fallbackUri: forward:/fallback/products
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter: "#{@defaultRateLimiter}"
+                key-resolver: "#{@userKeyResolver}"
+                deny-empty-key: false
 
         # ─────────────────────────────────────────
         # Payment Service — WITH Circuit Breaker
@@ -60,6 +79,11 @@ spring:
               args:
                 name: payment-service-cb
                 fallbackUri: forward:/fallback/payments
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter: "#{@defaultRateLimiter}"
+                key-resolver: "#{@userKeyResolver}"
+                deny-empty-key: false
 
         # ─────────────────────────────────────────
         # Fallback routes — handled by FallbackController
@@ -97,6 +121,11 @@ spring:
         enabled: true
     discovery:
       enabled: false
+      
+  data:
+    redis:
+      host: redis      # Docker service name
+      port: 6379
 
 # JWT config
 jwt:
