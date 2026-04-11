@@ -23,17 +23,20 @@ public class RateLimitConfig {
     // Key in Redis: "127.0.0.1" or "192.168.1.5"
     // ─────────────────────────────────────────
     @Bean
-    @Primary
-    public KeyResolver ipKeyResolver() {
-        return exchange -> {
+@Primary
+public KeyResolver ipKeyResolver() {
+    return exchange -> {
+        try {
             String ip = exchange.getRequest()
                 .getRemoteAddress()
                 .getAddress()
                 .getHostAddress();
-            // Mono.just() wraps a plain value into reactive Mono
             return Mono.just(ip);
-        };
-    }
+        } catch (Exception e) {
+            return Mono.just("anonymous");
+        }
+    };
+}
 
     // ─────────────────────────────────────────
     // Resolver 2: By Authenticated User
@@ -41,25 +44,32 @@ public class RateLimitConfig {
     // Key in Redis: "gaurang" or "admin"
     // ─────────────────────────────────────────
     @Bean
-    public KeyResolver userKeyResolver() {
-        return exchange -> {
-            // JwtAuthFilter already validated JWT and added this header
-            String username = exchange.getRequest()
-                .getHeaders()
-                .getFirst("X-User-Name");
-            // If header missing (shouldn't happen after JWT filter)
-            // fall back to IP
-            if (username == null || username.isEmpty()) {
-                return Mono.just(
-                    exchange.getRequest()
-                        .getRemoteAddress()
-                        .getAddress()
-                        .getHostAddress()
-                );
-            }
+public KeyResolver userKeyResolver() {
+    return exchange -> {
+        // Try X-User-Name header first (added by JwtAuthFilter)
+        String username = exchange.getRequest()
+            .getHeaders()
+            .getFirst("X-User-Name");
+
+        // Always return something — never empty!
+        // Empty key causes 405 bug in Spring Cloud Gateway
+        if (username != null && !username.isEmpty()) {
             return Mono.just(username);
-        };
-    }
+        }
+
+        // Fall back to IP address
+        try {
+            String ip = exchange.getRequest()
+                .getRemoteAddress()
+                .getAddress()
+                .getHostAddress();
+            return Mono.just(ip);
+        } catch (Exception e) {
+            // Last resort — return a default key
+            return Mono.just("anonymous");
+        }
+    };
+}
 
     // ─────────────────────────────────────────
     // Resolver 3: By IP + Path combination

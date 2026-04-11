@@ -20,11 +20,18 @@ public class PaymentController {
     @PostMapping
     public ResponseEntity<Payment> processPayment(
             @RequestParam String orderId,
-            @RequestParam double amount) {
-        log.info("Processing payment for order: {}, amount: {}", orderId, amount);
-        Payment payment = paymentService.processPayment(orderId, amount);
-        return payment != null ? 
-                ResponseEntity.ok(payment) : 
+            @RequestParam double amount,
+            // Read X-User-Name header added by JWT gateway filter
+            // defaultValue = "system" for cases where called internally
+            @RequestHeader(value = "X-User-Name", defaultValue = "system")
+                String customerId) {
+
+        log.info("Processing payment for order: {}, amount: {}, customer: {}",
+                 orderId, amount, customerId);
+
+        Payment payment = paymentService.processPayment(orderId, amount, customerId);
+        return payment != null ?
+                ResponseEntity.ok(payment) :
                 ResponseEntity.badRequest().build();
     }
 

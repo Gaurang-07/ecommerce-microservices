@@ -27,10 +27,10 @@ public class PaymentService {
     @KafkaListener(topics = "order-created-topic", groupId = "payment-service-group")
     public void handleOrderCreated(OrderCreatedEvent event) {
         log.info("Received OrderCreatedEvent: {}", event.getOrderId());
-        processPayment(event.getOrderId(), event.getTotalAmount());
+        processPayment(event.getOrderId(), event.getTotalAmount(), event.getCustomerId());
     }
 
-    public Payment processPayment(String orderId, double amount) {
+    public Payment processPayment(String orderId, double amount, String customerId) {
         try {
             Payment payment = new Payment();
             payment.setPaymentId(UUID.randomUUID().toString());
@@ -56,6 +56,7 @@ public class PaymentService {
                 amount,
                 payment.getStatus()
             );
+            event.setCustomerId(customerId);
             kafkaTemplate.send("payment-processed-topic", orderId, event);
 
             return savedPayment;
