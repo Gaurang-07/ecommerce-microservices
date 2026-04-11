@@ -169,6 +169,8 @@ services:
       - "8085:8080"    # Expose 8080 to outside world
     environment:
       - SPRING_PROFILES_ACTIVE=docker
+      - spring.data.redis.host=redis 
+      - spring.data.redis.port=6379  
     depends_on:
       - order-service
       - product-service
@@ -193,6 +195,28 @@ services:
       jwt.expiration: 86400000
     ports:
       - "8084:8084"
+    networks:
+      - ecommerce-network
+
+      
+  # Notification Service
+  notification-service:
+    build:
+      context: .
+      dockerfile: notification-service/Dockerfile
+    container_name: ecommerce-notification-service
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    environment:
+      spring.datasource.url: jdbc:postgresql://postgres:5432/ecommerce_db
+      spring.datasource.username: ecommerce_user
+      spring.datasource.password: ecommerce_password
+      spring.kafka.bootstrap-servers: kafka:29092
+    ports:
+      - "8086:8086"
     networks:
       - ecommerce-network
 

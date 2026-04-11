@@ -13,6 +13,7 @@ COPY order-service/pom.xml ./order-service/
 COPY payment-service/pom.xml ./payment-service/
 COPY product-service/pom.xml ./product-service/
 COPY api-gateway/pom.xml ./api-gateway/
+COPY notification-service/pom.xml ./notification-service/
 
 RUN mvn clean package -DskipTests -q -pl shared-models,auth-service
 
