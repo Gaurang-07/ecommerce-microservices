@@ -12,6 +12,7 @@ public class PaymentProcessedEvent {
     private String paymentId;
     private String orderId;
     private double amount;
+    private String customerId;
     private String status; // SUCCESS, FAILED
     private LocalDateTime processedAt;
 
