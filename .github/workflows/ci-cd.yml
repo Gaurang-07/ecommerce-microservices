@@ -81,8 +81,8 @@ jobs:
       - name: Build and push API Gateway
         uses: docker/build-push-action@v5
         with:
-          context: .
-          dockerfile: api-gateway/Dockerfile.ci
+          context: ./api-gateway
+          file: ./api-gateway/Dockerfile.ci
           push: true
           tags: |
             ${{ secrets.DOCKER_USERNAME }}/ecommerce-api-gateway:latest
@@ -93,8 +93,8 @@ jobs:
       - name: Build and push Auth Service
         uses: docker/build-push-action@v5
         with:
-          context: .
-          dockerfile: auth-service/Dockerfile.ci
+          context: ./auth-service
+          file: ./auth-service/Dockerfile.ci
           push: true
           tags: |
             ${{ secrets.DOCKER_USERNAME }}/ecommerce-auth-service:latest
@@ -105,8 +105,8 @@ jobs:
       - name: Build and push Order Service
         uses: docker/build-push-action@v5
         with:
-          context: .
-          dockerfile: order-service/Dockerfile.ci
+          context: ./order-service
+          file: ./order-service/Dockerfile.ci
           push: true
           tags: |
             ${{ secrets.DOCKER_USERNAME }}/ecommerce-order-service:latest
@@ -117,8 +117,8 @@ jobs:
       - name: Build and push Product Service
         uses: docker/build-push-action@v5
         with:
-          context: .
-          dockerfile: product-service/Dockerfile.ci
+          context: ./product-service
+          file: ./product-service/Dockerfile.ci
           push: true
           tags: |
             ${{ secrets.DOCKER_USERNAME }}/ecommerce-product-service:latest
@@ -129,8 +129,8 @@ jobs:
       - name: Build and push Payment Service
         uses: docker/build-push-action@v5
         with:
-          context: .
-          dockerfile: payment-service/Dockerfile.ci
+          context: ./payment-service
+          file: ./payment-service/Dockerfile.ci
           push: true
           tags: |
             ${{ secrets.DOCKER_USERNAME }}/ecommerce-payment-service:latest
@@ -141,8 +141,8 @@ jobs:
       - name: Build and push Notification Service
         uses: docker/build-push-action@v5
         with:
-          context: .
-          dockerfile: notification-service/Dockerfile.ci
+          context: ./notification-service
+          file: ./notification-service/Dockerfile.ci
           push: true
           tags: |
             ${{ secrets.DOCKER_USERNAME }}/ecommerce-notification-service:latest
