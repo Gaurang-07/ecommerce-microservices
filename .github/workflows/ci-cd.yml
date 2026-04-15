@@ -81,8 +81,8 @@ jobs:
       - name: Build and push API Gateway
         uses: docker/build-push-action@v5
         with:
-          context: ./api-gateway
-          file: ./api-gateway/Dockerfile.ci
+          context: .                           # ← root folder
+          file: ./api-gateway/Dockerfile.ci    # ← path to Dockerfile
           push: true
           tags: |
             ${{ secrets.DOCKER_USERNAME }}/ecommerce-api-gateway:latest
@@ -93,7 +93,7 @@ jobs:
       - name: Build and push Auth Service
         uses: docker/build-push-action@v5
         with:
-          context: ./auth-service
+          context: .
           file: ./auth-service/Dockerfile.ci
           push: true
           tags: |
@@ -105,7 +105,7 @@ jobs:
       - name: Build and push Order Service
         uses: docker/build-push-action@v5
         with:
-          context: ./order-service
+          context: .
           file: ./order-service/Dockerfile.ci
           push: true
           tags: |
@@ -117,7 +117,7 @@ jobs:
       - name: Build and push Product Service
         uses: docker/build-push-action@v5
         with:
-          context: ./product-service
+          context: .
           file: ./product-service/Dockerfile.ci
           push: true
           tags: |
@@ -129,7 +129,7 @@ jobs:
       - name: Build and push Payment Service
         uses: docker/build-push-action@v5
         with:
-          context: ./payment-service
+          context: .
           file: ./payment-service/Dockerfile.ci
           push: true
           tags: |
@@ -141,7 +141,7 @@ jobs:
       - name: Build and push Notification Service
         uses: docker/build-push-action@v5
         with:
-          context: ./notification-service
+          context: .
           file: ./notification-service/Dockerfile.ci
           push: true
           tags: |
