@@ -9,7 +9,6 @@ on:
       - main
 
 env:
-  DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
   JAVA_VERSION: '17'
 
 jobs:
@@ -34,21 +33,54 @@ jobs:
       - name: List built JARs
         run: |
           echo "=== Built JARs ==="
-          find . -name "*.jar" -not -path "*/original*" -not -path "*/.m2/*"
+          find . -name "*.jar" \
+            -not -path "*/original*" \
+            -not -path "*/.m2/*" \
+            -not -path "*/shared-models/*"
 
-      - name: Upload JARs as artifacts
+      # Upload each service JAR separately
+      # This preserves exact paths when downloading
+      - name: Upload api-gateway JAR
         uses: actions/upload-artifact@v4
         with:
-          name: service-jars
-          path: |
-            api-gateway/target/*.jar
-            auth-service/target/*.jar
-            order-service/target/*.jar
-            product-service/target/*.jar
-            payment-service/target/*.jar
-            notification-service/target/*.jar
+          name: api-gateway-jar
+          path: api-gateway/target/*.jar
           if-no-files-found: error
-          retention-days: 1
+
+      - name: Upload auth-service JAR
+        uses: actions/upload-artifact@v4
+        with:
+          name: auth-service-jar
+          path: auth-service/target/*.jar
+          if-no-files-found: error
+
+      - name: Upload order-service JAR
+        uses: actions/upload-artifact@v4
+        with:
+          name: order-service-jar
+          path: order-service/target/*.jar
+          if-no-files-found: error
+
+      - name: Upload product-service JAR
+        uses: actions/upload-artifact@v4
+        with:
+          name: product-service-jar
+          path: product-service/target/*.jar
+          if-no-files-found: error
+
+      - name: Upload payment-service JAR
+        uses: actions/upload-artifact@v4
+        with:
+          name: payment-service-jar
+          path: payment-service/target/*.jar
+          if-no-files-found: error
+
+      - name: Upload notification-service JAR
+        uses: actions/upload-artifact@v4
+        with:
+          name: notification-service-jar
+          path: notification-service/target/*.jar
+          if-no-files-found: error
 
   docker:
     runs-on: ubuntu-latest
@@ -59,15 +91,53 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Download JARs
+      # Download each JAR into its correct target/ folder
+      - name: Download api-gateway JAR
         uses: actions/download-artifact@v4
         with:
-          name: service-jars
+          name: api-gateway-jar
+          path: api-gateway/target/
 
+      - name: Download auth-service JAR
+        uses: actions/download-artifact@v4
+        with:
+          name: auth-service-jar
+          path: auth-service/target/
+
+      - name: Download order-service JAR
+        uses: actions/download-artifact@v4
+        with:
+          name: order-service-jar
+          path: order-service/target/
+
+      - name: Download product-service JAR
+        uses: actions/download-artifact@v4
+        with:
+          name: product-service-jar
+          path: product-service/target/
+
+      - name: Download payment-service JAR
+        uses: actions/download-artifact@v4
+        with:
+          name: payment-service-jar
+          path: payment-service/target/
+
+      - name: Download notification-service JAR
+        uses: actions/download-artifact@v4
+        with:
+          name: notification-service-jar
+          path: notification-service/target/
+
+      # Verify all JARs are in correct locations
       - name: Verify JARs
         run: |
-          echo "=== Downloaded JARs ==="
-          find . -name "*.jar" -not -path "*original*"
+          echo "=== Verifying JAR locations ==="
+          ls -la api-gateway/target/*.jar
+          ls -la auth-service/target/*.jar
+          ls -la order-service/target/*.jar
+          ls -la product-service/target/*.jar
+          ls -la payment-service/target/*.jar
+          ls -la notification-service/target/*.jar
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -81,8 +151,8 @@ jobs:
       - name: Build and push API Gateway
         uses: docker/build-push-action@v5
         with:
-          context: .                           # ← root folder
-          file: ./api-gateway/Dockerfile.ci    # ← path to Dockerfile
+          context: .
+          file: api-gateway/Dockerfile.ci
           push: true
           tags: |
             ${{ secrets.DOCKER_USERNAME }}/ecommerce-api-gateway:latest
@@ -94,7 +164,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: ./auth-service/Dockerfile.ci
+          file: auth-service/Dockerfile.ci
           push: true
           tags: |
             ${{ secrets.DOCKER_USERNAME }}/ecommerce-auth-service:latest
@@ -106,7 +176,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: ./order-service/Dockerfile.ci
+          file: order-service/Dockerfile.ci
           push: true
           tags: |
             ${{ secrets.DOCKER_USERNAME }}/ecommerce-order-service:latest
@@ -118,7 +188,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: ./product-service/Dockerfile.ci
+          file: product-service/Dockerfile.ci
           push: true
           tags: |
             ${{ secrets.DOCKER_USERNAME }}/ecommerce-product-service:latest
@@ -130,7 +200,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: ./payment-service/Dockerfile.ci
+          file: payment-service/Dockerfile.ci
           push: true
           tags: |
             ${{ secrets.DOCKER_USERNAME }}/ecommerce-payment-service:latest
@@ -142,7 +212,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: ./notification-service/Dockerfile.ci
+          file: notification-service/Dockerfile.ci
           push: true
           tags: |
             ${{ secrets.DOCKER_USERNAME }}/ecommerce-notification-service:latest
